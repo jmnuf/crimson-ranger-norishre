@@ -1,12 +1,30 @@
 {
   "name": "@jmnuf/crimson-ranger-norishre",
   "version": "0.0.0",
+  "main": "./dist/index.js",
+  "homepage": "https://github.com/jmnuf/crimson-ranger-norishre#readme",
   "description": "An attempt of writing a typesafe router for peasy-ui",
-  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+		"build": "tsc",
+		"prepublish": "build"
   },
+	"files": [
+		"dist",
+		"LICENSE",
+		"README.md"
+	],
   "keywords": [],
   "author": "JM <jose.m.nufio.0@gmail.com>",
-  "license": "MIT"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jmnuf/crimson-ranger-norishre.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jmnuf/crimson-ranger-norishre/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@peasy-lib/peasy-ui": "^0.9.33",
+    "typescript": "^5.0.4"
+  }
 }
