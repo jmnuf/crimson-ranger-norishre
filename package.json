@@ -1,0 +1,12 @@
+{
+  "name": "@jmnuf/crimson-ranger-norishre",
+  "version": "0.0.0",
+  "description": "An attempt of writing a typesafe router for peasy-ui",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "JM <jose.m.nufio.0@gmail.com>",
+  "license": "MIT"
+}
