@@ -1,5 +1,3 @@
-const router_template = `<div class="norishre-quiver"><\${ pulled_arrow === }></div>` as const;
-
 type Class<T extends {} = any, M extends Record<string, any> = Record<string, any>> = { new(...args: any[]): T; create: (model: M) => T };
 
 type DelayedRoute<TData extends Record<string, any>, C extends Class = Class> = {
