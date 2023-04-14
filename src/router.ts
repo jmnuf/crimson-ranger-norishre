@@ -18,7 +18,11 @@ type ArrowModels<T extends Record<string, DelayedRoute<PeasyUIModel> | LaidRoute
 };
 
 type KeyOf<T> = `${Exclude<keyof T, symbol>}`;
-type NorishreQuiver = Record<string, Route<any>> & { "%404%"?: Route<PeasyUIModel> };
+type NorishreQuiver = Record<string, Route<any>> & { "%404%"?: LaidRoute<PeasyUIModel>; };
+
+export const Base404Page = {
+	template: `<div><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>`,
+} as const;
 
 export class Norishre<const T extends NorishreQuiver> {
 	readonly quiver: T;
@@ -43,7 +47,7 @@ export class Norishre<const T extends NorishreQuiver> {
 
 	async pull_from_quiver(arrow_id: KeyOf<T>) {
 		const arrow = this.quiver[arrow_id];
-		history.pushState(null, "", arrow.path);
+		history.pushState(null, "", `${this._base_path}${arrow.path}`);
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
 			this._load_model(arrow_id);
 		}
@@ -110,6 +114,9 @@ export class Norishre<const T extends NorishreQuiver> {
 	find_arrow_id_by_url() {
 		const url_path = location.pathname;
 		for (const id of Object.keys(this.quiver) as KeyOf<T>[]) {
+			if (id == "%404%") {
+				continue;
+			}
 			const arrow = this.quiver[id];
 			const arr_path = `${this._base_path}${arrow.path}`;
 			if (arr_path != url_path) {
@@ -135,22 +142,23 @@ export class Norishre<const T extends NorishreQuiver> {
 	}
 
 	get full_path() {
-		return `${this._base_path}${this._arrow_id}`;
+		const arrow = this.quiver[this._arrow_id];
+		return `${this._base_path}${arrow.path}`;
 	}
 
 	get pulled_arrow() {
 		if (this._arrow_id == null) return null;
 		const pulled = this.models[this._arrow_id];
 		if (!pulled) {
-			if (this._arrow_id == "%404%") {
-				return { template: `<div><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>` };
+			if (this._arrow_id == "%404%" && !("%404%" in this.models)) {
+				return Base404Page;
 			}
 			return this.models[this._prev_arrow_id];
 		}
 		return pulled;
 	}
 	
-	static readonly template = `<div class="norishre-quiver"><\${ active_page === }></div>` as const;
+	static readonly template = `<crimson-ranger class="norishre-quiver" pui="pulled_arrow ===">></crimson-ranger>` as const;
 	get template() {
 		return Norishre.template;
 	}
