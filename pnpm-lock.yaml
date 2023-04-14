@@ -1,19 +1,12 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@peasy-lib/peasy-ui': ^0.9.33
   typescript: ^5.0.4
 
 devDependencies:
-  '@peasy-lib/peasy-ui': 0.9.33
   typescript: 5.0.4
 
 packages:
-
-  /@peasy-lib/peasy-ui/0.9.33:
-    resolution: {integrity: sha512-Db5/9cIEgUaVxSm9YzhBFON3BVgsiEHEeEUmBlDKMqc+51JzHeDPg7MN06hDF0M60S16cJUg+CNsBQoTcc9Pbw==}
-    engines: {node: '>=14.17.0'}
-    dev: true
 
   /typescript/5.0.4:
     resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
