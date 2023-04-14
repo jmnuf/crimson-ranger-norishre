@@ -1,1 +1,1 @@
-export { Norishre } from "router";
+export { Norishre } from "./router";
