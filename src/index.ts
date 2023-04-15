@@ -1,1 +1,1 @@
-export { Norishre, missNorishre } from "./router";
+export { Norishre, missNorishre } from "./dark-elves";
