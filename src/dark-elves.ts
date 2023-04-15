@@ -80,11 +80,43 @@ export class Norishre<const T extends NorishreQuiver> {
 			if (load_arrow_id == undefined) {
 				continue;
 			}
+			if (load_arrow_id === "%404%") {
+				this._load_model(load_arrow_id);
+			}
 		}
 		return [models, loader] as const;
 	}
 
 	private async _load_model(id: KeyOf<T>) {
+		if (this._loading_models.has(id)) {
+			return await this._loading_models.get(id)!;
+		}
+		if (id === "%404%") {
+			if (!(id in this.quiver)) {
+				return Base404Page;
+			}
+			const arrow = this.quiver[id];
+			if (arrow.loaded) {
+				return arrow.model;
+			}
+
+			const loader = this._loading_models;
+			const models = this.models;
+
+			const promise = (async () => {
+				const m = await arrow.load();
+				models[id] = m;
+				// @ts-expect-error
+				arrow.loaded = true;
+				// @ts-expect-error
+				arrow.model = m;
+				loader.delete(id);
+				return m;
+			})();
+
+			loader.set(id, promise);
+			return await promise;
+		}
 		const arrow = this.quiver[id];
 		if (arrow.loaded) {
 			return arrow.model;
@@ -165,7 +197,7 @@ export class Norishre<const T extends NorishreQuiver> {
 	}
 }
 
-type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>)}>;
+type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>)}> & { "%404%"?: { path: "/**/*", model: PeasyUIModel } };
 type RangerConfigIntoNorishreQuiver<T extends RangerConfig> = {
 	[k in keyof T]: T[k]["model"] extends PeasyUIModel ? {
 		loaded: true, path: T[k]["path"], model: T[k]["model"],
@@ -184,12 +216,13 @@ export function missNorishre<const T extends RangerConfig>(config: T) {
 			load: data.model,
 		} satisfies DelayedRoute<any> : {
 			loaded: true,
-			path: data.path,
+			path: data.path ?? "/**/*",
 			model: data.model,
 		} satisfies LaidRoute<any>;
 		// @ts-expect-error
 		quiver[id] = router;
 	}
+	// @ts-expect-error
 	const mistress = new Norishre(quiver);
 	return mistress;
 }
