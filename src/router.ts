@@ -50,10 +50,15 @@ export class Norishre<const T extends NorishreQuiver> {
 	}
 
 	async pull_from_quiver(arrow_id: KeyOf<T>) {
+		if (!(arrow_id in this.quiver)) {
+			this._prev_arrow_id = this._arrow_id;
+			this._arrow_id = "%404%" as KeyOf<T>;
+			return;
+		}
 		const arrow = this.quiver[arrow_id];
 		history.pushState(null, "", `${this._base_path}${arrow.path}`);
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
-			this._load_model(arrow_id);
+			void await this._load_model(arrow_id);
 		}
 		this._prev_arrow_id = this._arrow_id;
 		this._arrow_id = arrow_id;
@@ -87,7 +92,7 @@ export class Norishre<const T extends NorishreQuiver> {
 		return [models, loader] as const;
 	}
 
-	private _load_model(id: KeyOf<T>) {
+	private async _load_model(id: KeyOf<T>) {
 		const arrow = this.quiver[id];
 		if (arrow.loaded) {
 			return arrow.model;
@@ -107,7 +112,7 @@ export class Norishre<const T extends NorishreQuiver> {
 		})();
 
 		loader.set(id, promise);
-		return promise;
+		return await promise;
 	}
 
 	arrow_path(arrow_id: KeyOf<T>) {
