@@ -1,71 +1,34 @@
-type PeasyUIModel = { template: string | HTMLTemplateElement } & Record<string | number | symbol, unknown>;
-
-type DelayedRoute<TData extends PeasyUIModel> = {
-	path: `/${string}`;
-	loaded: false,
-	load: () => Promise<TData>;
-};
-type LaidRoute<TData extends PeasyUIModel> = {
-	path: `/${string}`;
-	loaded: true,
-	model: TData;
-};
-
-type Route<TData extends PeasyUIModel> = DelayedRoute<TData> | LaidRoute<TData>;
-
-type ArrowModels<T extends Record<string, DelayedRoute<PeasyUIModel> | LaidRoute<PeasyUIModel>>> = {
-	[K in keyof T]: T[K] extends DelayedRoute<infer R> ? R | undefined : T[K] extends LaidRoute<infer M> ? M : never;
-};
-
-type KeyOf<T> = `${Exclude<keyof T, symbol>}`;
-type NorishreQuiver = Record<string, Route<any>> & { "%404%"?: LaidRoute<PeasyUIModel>; };
+import {
+	ArrowModels, DelayedRoute, KeyOf,
+	LaidRoute, PeasyUIModel, Quiver,
+	RangerConfig, RangerConfigIntoQuiver, Route
+} from "base-types";
 
 export const Base404Page = {
 	template: `<div class="crimson-report-unkown-page"><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>`,
 } as const;
 
-export class Norishre<const T extends NorishreQuiver> {
+
+export class CrimsonRanger<const T extends Quiver> {
+	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
 	readonly quiver: T;
 	readonly models: ArrowModels<T>;
-	private _arrow_id: KeyOf<T>;
-	private _prev_arrow_id: KeyOf<T>;
-	private _loading_models: Map<string, Promise<PeasyUIModel>>;
-	private _base_path: string;
+	protected _arrow_id: KeyOf<T>;
+	protected _prev_arrow_id: KeyOf<T>;
+	protected _loading_models: Map<string, Promise<PeasyUIModel>>;
+	protected _base_path: string;
 
-	constructor(quiver: T, base_path:"" | `/${string}` = "", first_arrow?: KeyOf<T>) {
+	constructor(quiver: T, base_path:"" | `/${string}` = "", first_arrow: KeyOf<T>) {
 		this.quiver = Object.freeze(quiver);
 		while (base_path.endsWith("/")) {
 			base_path = base_path.substring(0, base_path.length - 1) as `/${string}`;
 		}
 		this._base_path = base_path;
-		this._arrow_id = this.find_arrow_id_by_url() as KeyOf<T>;
+		this._arrow_id = first_arrow;
 		this._prev_arrow_id = this._arrow_id;
 		const [models, loading] = this._init_(quiver, first_arrow);
 		this.models = models;
 		this._loading_models = loading;
-		window.addEventListener("popstate", () => {
-			const id = this.find_arrow_id_by_url() as KeyOf<T>;
-			void this.pull_from_quiver(id);
-		});
-	}
-
-	async loadDrawnArrow() {
-		return await this._load_model(this._arrow_id);
-	}
-
-	async pull_from_quiver(arrow_id: KeyOf<T>) {
-		if (!(arrow_id in this.quiver)) {
-			this._prev_arrow_id = this._arrow_id;
-			this._arrow_id = "%404%" as KeyOf<T>;
-			return;
-		}
-		const arrow = this.quiver[arrow_id];
-		history.pushState(null, "", `${this._base_path}${arrow.path}`);
-		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
-			void await this._load_model(arrow_id);
-		}
-		this._prev_arrow_id = this._arrow_id;
-		this._arrow_id = arrow_id;
 	}
 
 	private _init_(quiver: T, load_arrow_id?: KeyOf<T>) {
@@ -87,7 +50,7 @@ export class Norishre<const T extends NorishreQuiver> {
 		return [models, loader] as const;
 	}
 
-	private async _load_model(id: KeyOf<T>) {
+	protected async _load_model(id: KeyOf<T>) {
 		if (this._loading_models.has(id)) {
 			return await this._loading_models.get(id)!;
 		}
@@ -139,30 +102,32 @@ export class Norishre<const T extends NorishreQuiver> {
 		return await promise;
 	}
 
+	async loadDrawnArrow() {
+		return await this._load_model(this._arrow_id);
+	}
+
+	async pull_from_quiver(arrow_id: KeyOf<T>) {
+		if (!(arrow_id in this.quiver)) {
+			this._prev_arrow_id = this._arrow_id;
+			this._arrow_id = "%404%" as KeyOf<T>;
+			return;
+		}
+		const arrow = this.quiver[arrow_id];
+		history.pushState(null, "", `${this._base_path}${arrow.path}`);
+		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
+			void await this._load_model(arrow_id);
+		}
+		this._prev_arrow_id = this._arrow_id;
+		this._arrow_id = arrow_id;
+	}
+
 	arrow_path(arrow_id: KeyOf<T>) {
 		const arrow = this.quiver[arrow_id];
 		return `${this._base_path}${arrow.path}`;
 	}
 
-	find_arrow_id_by_url() {
-		const url_path = location.pathname;
-		for (const id of Object.keys(this.quiver) as KeyOf<T>[]) {
-			if (id == "%404%") {
-				continue;
-			}
-			const arrow = this.quiver[id];
-			const arr_path = `${this._base_path}${arrow.path}`;
-			if (arr_path != url_path) {
-				continue;
-			}
-
-			return id;
-		}
-		return "%404%";
-	}
-
 	new_link(route_name: KeyOf<T>, message?: string) {
-		return new NorishreArrow<typeof this, T>(this, route_name, message);
+		return new CrimsonArrow<typeof this, T>(this, route_name, message);
 	}
 
 	links_list() {
@@ -190,44 +155,17 @@ export class Norishre<const T extends NorishreQuiver> {
 		}
 		return pulled;
 	}
-	
-	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
+
+	get active_id() {
+		return this._arrow_id;
+	}
+
 	get template() {
-		return Norishre.template;
+		return CrimsonRanger.template;
 	}
 }
 
-type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>)}> & { "%404%"?: { path: "/**/*", model: PeasyUIModel } };
-type RangerConfigIntoNorishreQuiver<T extends RangerConfig> = {
-	[k in keyof T]: T[k]["model"] extends PeasyUIModel ? {
-		loaded: true, path: T[k]["path"], model: T[k]["model"],
-	} : T[k]["model"] extends () => Promise<PeasyUIModel> ? {
-		loaded: false, path: T[k]["path"], load: T[k]["model"],
-	} : never;
-};
-
-export function missNorishre<const T extends RangerConfig>(config: T) {
-	let quiver = {} as unknown as RangerConfigIntoNorishreQuiver<T>;
-	for (const id of Object.keys(config) as KeyOf<T>[]) {
-		const data = config[id];
-		const router = typeof data.model === "function" ? {
-			loaded: false,
-			path: data.path,
-			load: data.model,
-		} satisfies DelayedRoute<any> : {
-			loaded: true,
-			path: data.path ?? "/**/*",
-			model: data.model,
-		} satisfies LaidRoute<any>;
-		// @ts-expect-error
-		quiver[id] = router;
-	}
-	// @ts-expect-error
-	const mistress = new Norishre(quiver);
-	return mistress;
-}
-
-export class NorishreArrow<const R extends Norishre<T>, const T extends Record<string, Route<any>>> {
+export class CrimsonArrow<const R extends CrimsonRanger<T>, const T extends Record<string, Route<any>>> {
 	static readonly template = `<a href="\${aim}" \${ click @=> _on_click } \${ ==> element }>\${intent}</a>`;
 	readonly router: R;
 	readonly target: KeyOf<T>;
@@ -250,6 +188,34 @@ export class NorishreArrow<const R extends Norishre<T>, const T extends Record<s
 	}
 
 	get template() {
-		return NorishreArrow.template;
+		return CrimsonArrow.template;
 	}
+}
+
+type ElfInstructions<T extends RangerConfig> = {
+	path: `/${string}` | "",
+	routes: T,
+	first_arrow: KeyOf<T>,
+};
+
+export function missElf<const T extends RangerConfig>(config: ElfInstructions<T>) {
+	const quiver = {} as RangerConfigIntoQuiver<T>;
+	const { routes } = config;
+	for (const id of Object.keys(routes) as KeyOf<T>[]) {
+		const data = routes[id];
+		const router = typeof data.model === "function" ? {
+			loaded: false,
+			path: data.path,
+			load: data.model,
+		} satisfies DelayedRoute<any> : {
+			loaded: true,
+			path: data.path ?? "/**/*",
+			model: data.model,
+		} satisfies LaidRoute<any>;
+		// @ts-expect-error
+		quiver[id] = router;
+	}
+	// @ts-expect-error
+	const mistress = new CrimsonRanger(quiver, config.path, config.first_arrow)
+	return mistress;
 }
