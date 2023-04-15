@@ -173,7 +173,36 @@ export class Norishre<const T extends NorishreQuiver> {
 	}
 }
 
-class NorishreArrow<const R extends Norishre<T>, const T extends Record<string, Route<any>>> {
+type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>)}>;
+type RangerConfigIntoNorishreQuiver<T extends RangerConfig> = {
+	[k in keyof T]: T[k]["model"] extends PeasyUIModel ? {
+		loaded: true, path: T[k]["path"], model: T[k]["model"],
+	} : T[k]["model"] extends () => Promise<PeasyUIModel> ? {
+		loaded: false, path: T[k]["path"], load: T[k]["model"],
+	} : never;
+};
+
+export function missNorishre<const T extends RangerConfig>(config: T) {
+	let quiver = {} as unknown as RangerConfigIntoNorishreQuiver<T>;
+	for (const id of Object.keys(config) as KeyOf<T>[]) {
+		const data = config[id];
+		const router = typeof data.model === "function" ? {
+			loaded: false,
+			path: data.path,
+			load: data.model,
+		} satisfies DelayedRoute<any> : {
+			loaded: true,
+			path: data.path,
+			model: data.model,
+		} satisfies LaidRoute<any>;
+		// @ts-expect-error
+		quiver[id] = router;
+	}
+	const mistress = new Norishre(quiver);
+	return mistress;
+}
+
+export class NorishreArrow<const R extends Norishre<T>, const T extends Record<string, Route<any>>> {
 	static readonly template = `<a href="\${aim}" \${ click @=> _on_click } \${ ==> element }>\${intent}</a>`;
 	readonly router: R;
 	readonly target: KeyOf<T>;
