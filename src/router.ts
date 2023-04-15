@@ -43,6 +43,10 @@ export class Norishre<const T extends NorishreQuiver> {
 		const [models, loading] = this._init_(quiver, first_arrow);
 		this.models = models;
 		this._loading_models = loading;
+		window.addEventListener("popstate", () => {
+			const id = this.find_arrow_id_by_url() as KeyOf<T>;
+			void this.pull_from_quiver(id);
+		});
 	}
 
 	async pull_from_quiver(arrow_id: KeyOf<T>) {
