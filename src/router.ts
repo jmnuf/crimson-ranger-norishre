@@ -49,6 +49,10 @@ export class Norishre<const T extends NorishreQuiver> {
 		});
 	}
 
+	async loadDrawnArrow() {
+		return await this._load_model(this._arrow_id);
+	}
+
 	async pull_from_quiver(arrow_id: KeyOf<T>) {
 		if (!(arrow_id in this.quiver)) {
 			this._prev_arrow_id = this._arrow_id;
@@ -75,18 +79,6 @@ export class Norishre<const T extends NorishreQuiver> {
 			}
 			if (load_arrow_id == undefined) {
 				continue;
-			}
-			if (load_arrow_id == id) {
-				loader.set(id, (async () => {
-					const m = await arrow.load();
-					models[id] = m;
-					// @ts-expect-error
-					arrow.loaded = true;
-					// @ts-expect-error
-					arrow.model = m;
-					loader.delete(id);
-					return m;
-				})());
 			}
 		}
 		return [models, loader] as const;
