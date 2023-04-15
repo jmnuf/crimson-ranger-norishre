@@ -1,6 +1,6 @@
 {
   "name": "@jmnuf/norishre",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "./dist/index.js",
   "homepage": "https://github.com/jmnuf/crimson-ranger-norishre#readme",
   "description": "An attempt of writing a typesafe router for peasy-ui",
@@ -30,7 +30,8 @@
 		"@peasy-lib/peasy-ui": "^0.9.38"
 	},
   "devDependencies": {
-    "typescript": "^5.0.4"
+		"typescript": "^5.0.4",
+		"@peasy-lib/peasy-ui": "^0.9.38"
   },
   "types": "./dist/index.d.ts"
 }
