@@ -21,7 +21,7 @@ type KeyOf<T> = `${Exclude<keyof T, symbol>}`;
 type NorishreQuiver = Record<string, Route<any>> & { "%404%"?: LaidRoute<PeasyUIModel>; };
 
 export const Base404Page = {
-	template: `<div><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>`,
+	template: `<div class="crimson-report-unkown-page"><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>`,
 } as const;
 
 export class Norishre<const T extends NorishreQuiver> {
@@ -162,7 +162,7 @@ export class Norishre<const T extends NorishreQuiver> {
 		return pulled;
 	}
 	
-	static readonly template = `<crimson-ranger class="norishre-quiver" pui="pulled_arrow ==="></crimson-ranger>` as const;
+	static readonly template = `<crimson-ranger class="crimson-ranger-quiver" pui="pulled_arrow ==="></crimson-ranger>` as const;
 	get template() {
 		return Norishre.template;
 	}
