@@ -167,7 +167,7 @@ export class Norishre<const T extends NorishreQuiver> {
 		return pulled;
 	}
 	
-	static readonly template = `<crimson-ranger class="crimson-ranger-quiver" pui="pulled_arrow ==="></crimson-ranger>` as const;
+	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
 	get template() {
 		return Norishre.template;
 	}
