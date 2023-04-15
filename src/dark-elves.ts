@@ -130,13 +130,17 @@ export class CrimsonRanger<const T extends Quiver> {
 		return new CrimsonArrow<typeof this, T>(this, route_name, message);
 	}
 
-	links_list() {
+	links_list(arrow_ids:KeyOf<T>[] = this.list_arrow_ids()) {
 		const list = [];
-		for (const key of Object.keys(this.quiver) as KeyOf<T>[]) {
+		for (const key of arrow_ids) {
 			const link = this.new_link(key);
 			list.push(link);
 		}
 		return list;
+	}
+
+	list_arrow_ids() {
+		return Object.keys(this.quiver) as KeyOf<T>[];
 	}
 
 	get full_path() {
