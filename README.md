@@ -4,6 +4,11 @@ Norishre is our dear dark elf ranger with beautiful crimson eyes which keeps tra
 # Peasy-UI TypeScript Router
 This is a typescript based router that handles switching your pages within a [peasy-ui](https://github.com/peasy-ui/peasy-ui) app using as reference the `window.location.pathname`, essentially the current path in your domain `my-app.com` triggers path `/`, and `my-app.com/bio` triggers `/bio`, etc.
 
+## Current Abilities
+- Simple routing based on URL (doesn't take into account query params)
+- Customizable 404 page
+- Async loading of page models
+
 ## Perchance Might Do
 Disclaimer* This list doesn't really reflect whether it will be done or not nor the order of which they'll be done!
 - Create base `CrimsonRanger` class that is like our dear Norishre but doesn't auto-update based on the pathname, so one can manage the active component at their own discretion.
