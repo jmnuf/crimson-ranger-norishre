@@ -16,9 +16,10 @@ export class CrimsonRanger<const T extends Quiver> {
 	protected _arrow_id: KeyOf<T>;
 	protected _prev_arrow_id: KeyOf<T>;
 	protected _loading_models: Map<string, Promise<PeasyUIModel>>;
+	protected _live_arrows: Map<string, CrimsonArrow<typeof this, T>>;
 	protected _base_path: string;
 
-	constructor(quiver: T, base_path:"" | `/${string}` = "", first_arrow: KeyOf<T>) {
+	constructor(quiver: T, base_path: "" | `/${string}` = "", first_arrow: KeyOf<T>) {
 		this.quiver = Object.freeze(quiver);
 		while (base_path.endsWith("/")) {
 			base_path = base_path.substring(0, base_path.length - 1) as `/${string}`;
@@ -26,6 +27,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		this._base_path = base_path;
 		this._arrow_id = first_arrow;
 		this._prev_arrow_id = this._arrow_id;
+		this._live_arrows = new Map();
 		const [models, loading] = this._init_(quiver, first_arrow);
 		this.models = models;
 		this._loading_models = loading;
@@ -123,24 +125,50 @@ export class CrimsonRanger<const T extends Quiver> {
 
 	arrow_path(arrow_id: KeyOf<T>) {
 		const arrow = this.quiver[arrow_id];
-		return `${this._base_path}${arrow.path}`;
+		return encodeURI(`${this._base_path}${arrow.path}`);
 	}
 
-	new_link(route_name: KeyOf<T>, message?: string) {
-		return new CrimsonArrow<typeof this, T>(this, route_name, message);
+	private create_or_retrieve_arrow = (route_name: KeyOf<T>, message?: string) => {
+		if (this._live_arrows.has(route_name)) {
+			return this._live_arrows.get(route_name)!;
+		}
+		const arrow = new CrimsonArrow<typeof this, T>(this, route_name, message);
+		this._live_arrows.set(route_name, arrow);
+		return arrow;
+	};
+
+	is_arrow_live(route_name: KeyOf<T>) {
+		return this._live_arrows.has(route_name);
 	}
 
-	links_list(arrow_ids:KeyOf<T>[] = this.list_arrow_ids()) {
+	is_model_loaded(route_name: KeyOf<T>) {
+		return route_name in this.models;
+	}
+
+	get_arrow(route_name: KeyOf<T>, message?: string) {
+		// TODO: Move this to be done when the link is almost or fully visible
+		if (!this.is_model_loaded(route_name)) {
+			// Start loading the model when a link to it is requested and not loaded yet
+			this._load_model(route_name);
+		}
+		// Create arrow if it wasn't live before
+		const arrow = this.create_or_retrieve_arrow(route_name, message);
+		return arrow;
+	}
+
+	links_list(arrow_ids: Exclude<KeyOf<T>, `%${string}`>[] = this.list_arrow_ids()) {
 		const list = [];
 		for (const key of arrow_ids) {
-			const link = this.new_link(key);
+			const link = this.get_arrow(key);
 			list.push(link);
 		}
 		return list;
 	}
 
 	list_arrow_ids() {
-		return Object.keys(this.quiver) as KeyOf<T>[];
+		const all_ids = Object.keys(this.quiver) as KeyOf<T>[];
+		const arrow_ids = all_ids.filter(id => id.startsWith("%")) as Exclude<KeyOf<T>, `%${string}`>[];
+		return arrow_ids;
 	}
 
 	get full_path() {
@@ -175,19 +203,23 @@ export class CrimsonArrow<const R extends CrimsonRanger<T>, const T extends Reco
 	readonly target: KeyOf<T>;
 	readonly aim: string;
 	intent: string;
-	// This gets set by peasy after it's mounted
+	on_pulled?: (ev: PointerEvent, arrow: CrimsonArrow<R, T>) => any;
+	// element property gets set by peasy after it's mounted
 	declare readonly element: HTMLAnchorElement;
-	declare private _on_click: (event: PointerEvent) => Promise<void>
+	declare private _on_click: (event: PointerEvent) => Promise<void>;
 
 	constructor(router: R, target: KeyOf<T>, message?: string) {
 		this.router = router;
 		this.target = target;
 		this.aim = router.arrow_path(target);
 		this.intent = message ?? target.replace(/[_-]/g, " ");
+		this.on_pulled = undefined;
 
 		this._on_click = async (event: PointerEvent) => {
 			event.preventDefault();
 			await this.router.pull_from_quiver(this.target);
+			if (typeof this.on_pulled != "function") return;
+			this.on_pulled(event, this);
 		};
 	}
 
@@ -220,6 +252,6 @@ export function missElf<const T extends RangerConfig>(config: ElfInstructions<T>
 		quiver[id] = router;
 	}
 	// @ts-expect-error
-	const mistress = new CrimsonRanger(quiver, config.path, config.first_arrow)
+	const mistress = new CrimsonRanger(quiver, config.path, config.first_arrow);
 	return mistress;
 }
