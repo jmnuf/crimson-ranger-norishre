@@ -5,7 +5,7 @@
   "homepage": "https://github.com/jmnuf/crimson-ranger-norishre#readme",
   "description": "An attempt of writing a typesafe router for peasy-ui",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && echo Build success",
     "test": "jest",
 		"pub": "pnpm test && pnpm build && pnpm publish"
   },
