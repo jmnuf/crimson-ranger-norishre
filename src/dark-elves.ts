@@ -9,6 +9,10 @@ export const Base404Page = {
 } as const;
 
 
+type AbsoluteArrowPath<T extends Quiver> = Exclude<KeyOf<T>, `%${string}` | `${string}[${string}]${string}`>;
+
+const path_param_regex = /\[[^]]+\]/;
+
 export class CrimsonRanger<const T extends Quiver> {
 	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
 	readonly quiver: T;
@@ -24,6 +28,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		while (base_path.endsWith("/")) {
 			base_path = base_path.substring(0, base_path.length - 1) as `/${string}`;
 		}
+		base_path = base_path.split("/").map(v => encodeURIComponent(v)).join("/") as `/${string}`;
 		this._base_path = base_path;
 		this._arrow_id = first_arrow;
 		this._prev_arrow_id = this._arrow_id;
@@ -38,6 +43,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		const loader = new Map<string, Promise<PeasyUIModel>>();
 		for (const id of Object.keys(quiver) as KeyOf<T>[]) {
 			const arrow = quiver[id];
+			arrow.path = this._encode_path_pieces(arrow.path) as `/${string}`;
 			if (arrow.loaded) {
 				models[id] = arrow.model;
 				continue;
@@ -50,6 +56,15 @@ export class CrimsonRanger<const T extends Quiver> {
 			}
 		}
 		return [models, loader] as const;
+	}
+
+	private _encode_path_pieces(input: string): string {
+		return input.split("/").map(path_piece => {
+			if (path_param_regex.test(path_piece)) {
+				return path_piece;
+			}
+			return encodeURIComponent(path_piece);
+		}).join("/");
 	}
 
 	protected async _load_model(id: KeyOf<T>) {
@@ -108,24 +123,49 @@ export class CrimsonRanger<const T extends Quiver> {
 		return await this._load_model(this._arrow_id);
 	}
 
-	async pull_from_quiver(arrow_id: KeyOf<T>) {
+	async pull_from_quiver(arrow_id: KeyOf<T>, path_params?: Record<string, string>) {
 		if (!(arrow_id in this.quiver)) {
 			this._prev_arrow_id = this._arrow_id;
 			this._arrow_id = "%404%" as KeyOf<T>;
 			return;
 		}
 		const arrow = this.quiver[arrow_id];
-		history.pushState(null, "", `${this._base_path}${arrow.path}`);
+		history.pushState(null, "", this.arrow_path(arrow_id, path_params));
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
 			void await this._load_model(arrow_id);
+		}
+		if ("on_pulled" in arrow && typeof arrow.on_pulled == "function") {
+			const model = this.models[this._arrow_id]!;
+			arrow.on_pulled({
+				model,
+				params: path_params,
+			});
 		}
 		this._prev_arrow_id = this._arrow_id;
 		this._arrow_id = arrow_id;
 	}
 
-	arrow_path(arrow_id: KeyOf<T>) {
+	// TODO: Properly handle multiple path params
+	arrow_path(arrow_id: KeyOf<T>, path_params: Record<string, string> = {}) {
 		const arrow = this.quiver[arrow_id];
-		return encodeURI(`${this._base_path}${arrow.path}`);
+		let path = arrow.path;
+
+		for (const param_name of Object.keys(path_params)) {
+			const param_value = path_params[param_name];
+			const path_pieces = path.split("/");
+			for (let i = 0; i < path_pieces.length; i++) {
+				let piece = path_pieces[i];
+				if (!piece.includes(`[${param_name}]`)) {
+					continue;
+				}
+				while (piece.includes(`[${param_name}]`)) {
+					piece = piece.replace(`[${param_name}]`, param_value) as `/${string}`;
+				}
+				path_pieces[i] = encodeURIComponent(piece);
+			}
+		}
+
+		return `${this._base_path}${path}`;
 	}
 
 	private create_or_retrieve_arrow = (route_name: KeyOf<T>, message?: string) => {
@@ -145,18 +185,22 @@ export class CrimsonRanger<const T extends Quiver> {
 		return route_name in this.models;
 	}
 
+	is_model_loading(route_name: KeyOf<T>) {
+		return this._loading_models.has(route_name);
+	}
+
 	get_arrow(route_name: KeyOf<T>, message?: string) {
 		// TODO: Move this to be done when the link is almost or fully visible
-		if (!this.is_model_loaded(route_name)) {
-			// Start loading the model when a link to it is requested and not loaded yet
-			this._load_model(route_name);
+		if (!this.is_model_loaded(route_name) && !this.is_model_loading(route_name)) {
+			// Start loading the model when a link to it is requested and not loaded/loading yet
+			void this._load_model(route_name);
 		}
 		// Create arrow if it wasn't live before
 		const arrow = this.create_or_retrieve_arrow(route_name, message);
 		return arrow;
 	}
 
-	links_list(arrow_ids: Exclude<KeyOf<T>, `%${string}`>[] = this.list_arrow_ids()) {
+	links_list(arrow_ids: AbsoluteArrowPath<T>[] = this.list_arrow_ids()) {
 		const list = [];
 		for (const key of arrow_ids) {
 			const link = this.get_arrow(key);
@@ -167,7 +211,9 @@ export class CrimsonRanger<const T extends Quiver> {
 
 	list_arrow_ids() {
 		const all_ids = Object.keys(this.quiver) as KeyOf<T>[];
-		const arrow_ids = all_ids.filter(id => id.startsWith("%")) as Exclude<KeyOf<T>, `%${string}`>[];
+		const arrow_ids = all_ids.filter(id => {
+			return !(id.startsWith("%") || path_param_regex.test(id));
+		}) as AbsoluteArrowPath<T>[];
 		return arrow_ids;
 	}
 

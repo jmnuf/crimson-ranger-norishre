@@ -1,9 +1,10 @@
-export type PeasyUIModel = { template: string | HTMLTemplateElement } & Record<string | number | symbol, unknown>;
+export type PeasyUIModel = { template: string | HTMLTemplateElement; } & Record<string | number | symbol, unknown>;
 
 export type DelayedRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: false,
 	load: () => Promise<TData>;
+	on_pulled?: (ev: { model: TData, params?: Record<string, string>; }) => any;
 };
 
 export type LaidRoute<TData extends PeasyUIModel> = {
@@ -23,7 +24,7 @@ export type Quiver = Record<string, Route<any>> & {
 	"%404%"?: LaidRoute<PeasyUIModel>;
 };
 
-export type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>)}> & { "%404%"?: { path: "/**/*", model: PeasyUIModel } };
+export type RangerConfig = Record<string, { path: `/${string}`, model: PeasyUIModel | (() => Promise<PeasyUIModel>); }> & { "%404%"?: { path: "/**/*", model: PeasyUIModel; }; };
 export type RangerConfigIntoQuiver<T extends RangerConfig> = {
 	[k in keyof T]: T[k]["model"] extends PeasyUIModel ? {
 		loaded: true, path: T[k]["path"], model: T[k]["model"],
