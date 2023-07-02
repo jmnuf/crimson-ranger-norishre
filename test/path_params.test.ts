@@ -32,7 +32,7 @@ describe("Router Creation", () => {
 		expect(doc_elem).toEqual(mod_elem);
 	});
 
-	test("Generating correct path on quiver pull", () => {
+	test("Generate correct path when pulling from quiver manually", () => {
 		const path = router.arrow_path("hello", {
 			name: "John",
 		});

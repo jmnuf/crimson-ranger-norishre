@@ -11,7 +11,7 @@ export const Base404Page = {
 
 type AbsoluteArrowPath<T extends Quiver> = Exclude<KeyOf<T>, `%${string}` | `${string}[${string}]${string}`>;
 
-const path_param_regex = /\[[^]]+\]/;
+const path_param_regex = /\[[^\]]+\]/;
 
 export class CrimsonRanger<const T extends Quiver> {
 	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
@@ -163,6 +163,7 @@ export class CrimsonRanger<const T extends Quiver> {
 				}
 				path_pieces[i] = encodeURIComponent(piece);
 			}
+			path = path_pieces.join("/") as `/${string}`;
 		}
 
 		return `${this._base_path}${path}`;
