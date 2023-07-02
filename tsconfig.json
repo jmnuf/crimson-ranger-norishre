@@ -30,5 +30,9 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "skipLibCheck": true
-  }
+  },
+	"include": [
+		"src/**/*.ts",
+		"src/*.ts"
+	]
 }

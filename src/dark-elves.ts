@@ -2,7 +2,7 @@ import {
 	ArrowModels, DelayedRoute, KeyOf,
 	LaidRoute, PeasyUIModel, Quiver,
 	RangerConfig, RangerConfigIntoQuiver, Route
-} from "base-types";
+} from "./base-types";
 
 export const Base404Page = {
 	template: `<div class="crimson-report-unkown-page"><h1>404 Error: Page not found</h1><h2>Something is missing...</h2></div>`,

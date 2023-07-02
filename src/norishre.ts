@@ -1,5 +1,5 @@
-import { Quiver, KeyOf, DelayedRoute, LaidRoute, RangerConfig, RangerConfigIntoQuiver } from "base-types";
-import { CrimsonRanger } from "dark-elves";
+import { Quiver, KeyOf, DelayedRoute, LaidRoute, RangerConfig, RangerConfigIntoQuiver } from "./base-types";
+import { CrimsonRanger } from "./dark-elves";
 
 function find_arrow_id_by_url<T extends Quiver>(base_path: string, quiver: T) {
 	const url_path = location.pathname;
@@ -63,7 +63,8 @@ export function missNorishre<const T extends RangerConfig>(config: T, path: `/${
 		// @ts-expect-error
 		quiver[id] = router;
 	}
+	type R = typeof quiver;
 	// @ts-expect-error
-	const mistress = new Norishre(quiver, path);
+	const mistress = new Norishre<R>(quiver, path);
 	return mistress;
 }
