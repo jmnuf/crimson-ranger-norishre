@@ -8,6 +8,7 @@ This is a typescript based router that handles switching your pages within a [pe
 - Simple routing based on URL (doesn't take into account query params)
 - Customizable 404 page
 - Async loading of page models
+- Able to manually call onto pages with simple path params (To be expanded upon)
 
 ## Perchance Might Do
 Disclaimer* This list doesn't really reflect whether it will be done or not nor the order of which they'll be done!

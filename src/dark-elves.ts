@@ -298,7 +298,8 @@ export function missElf<const T extends RangerConfig>(config: ElfInstructions<T>
 		// @ts-expect-error
 		quiver[id] = router;
 	}
+	type Q = typeof quiver;
 	// @ts-expect-error
-	const mistress = new CrimsonRanger(quiver, config.path, config.first_arrow);
+	const mistress = new CrimsonRanger<Q>(quiver, config.path, config.first_arrow);
 	return mistress;
 }
