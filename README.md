@@ -1,5 +1,7 @@
 # Crimson Ranger Norishre
 Norishre is our dear dark elf ranger with beautiful crimson eyes which keeps track of the pathname within your peasy-ui web-app. She prefers to hold as little communication with you as possible while not impeeding the productivity of both of you.
+> ![image](./norishre.png)
+> Credit to keii from my discord for the drawing
 
 # Peasy-UI TypeScript Router
 This is a typescript based router that handles switching your pages within a [peasy-ui](https://github.com/peasy-ui/peasy-ui) app using as reference the `window.location.pathname`, essentially the current path in your domain `my-app.com` triggers path `/`, and `my-app.com/bio` triggers `/bio`, etc.
