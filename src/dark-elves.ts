@@ -1,5 +1,5 @@
 import {
-	ArrowModels, DelayedRoute, KeyOf,
+	ArrowModels, DelayedRoute, ExtraParams, KeyOf,
 	LaidRoute, PeasyUIModel, Quiver,
 	RangerConfig, RangerConfigIntoQuiver, Route
 } from "./base-types";
@@ -11,7 +11,7 @@ export const Base404Page = {
 
 type AbsoluteArrowPath<T extends Quiver> = Exclude<KeyOf<T>, `%${string}` | `${string}[${string}]${string}`>;
 
-const path_param_regex = /\[[^\]]+\]/;
+const path_param_regex = /\[([^\]]+)\]/;
 
 export class CrimsonRanger<const T extends Quiver> {
 	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
@@ -123,22 +123,22 @@ export class CrimsonRanger<const T extends Quiver> {
 		return await this._load_model(this._arrow_id);
 	}
 
-	async pull_from_quiver(arrow_id: KeyOf<T>, path_params?: Record<string, string>) {
+	async pull_from_quiver(arrow_id: KeyOf<T>, params?: ExtraParams) {
 		if (!(arrow_id in this.quiver)) {
 			this._prev_arrow_id = this._arrow_id;
 			this._arrow_id = "%404%" as KeyOf<T>;
 			return;
 		}
 		const arrow = this.quiver[arrow_id];
-		history.pushState(null, "", this.arrow_path(arrow_id, path_params));
+		history.pushState(null, "", this.arrow_path(arrow_id, params));
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
 			void await this._load_model(arrow_id);
 		}
 		if ("on_pulled" in arrow && typeof arrow.on_pulled == "function") {
 			const model = this.models[this._arrow_id]!;
-			arrow.on_pulled({
+			void await arrow.on_pulled({
 				model,
-				params: path_params,
+				params,
 			});
 		}
 		this._prev_arrow_id = this._arrow_id;
@@ -146,26 +146,65 @@ export class CrimsonRanger<const T extends Quiver> {
 	}
 
 	// TODO: Properly handle multiple path params
-	arrow_path(arrow_id: KeyOf<T>, path_params: Record<string, string> = {}) {
+	arrow_path(arrow_id: KeyOf<T>, extra_params?: ExtraParams) {
 		const arrow = this.quiver[arrow_id];
 		let path = arrow.path;
 
-		for (const param_name of Object.keys(path_params)) {
-			const param_value = path_params[param_name];
-			const path_pieces = path.split("/");
-			for (let i = 0; i < path_pieces.length; i++) {
-				let piece = path_pieces[i];
-				if (!piece.includes(`[${param_name}]`)) {
-					continue;
+		if (extra_params && extra_params.path) {
+			const path_params = extra_params.path;
+			for (const param_name of Object.keys(path_params)) {
+				const param_value = path_params[param_name];
+				const path_pieces = path.split("/");
+				for (let i = 0; i < path_pieces.length; i++) {
+					let piece = path_pieces[i];
+					if (!piece.includes(`[${param_name}]`)) {
+						continue;
+					}
+					if (Array.isArray(param_value)) {
+						// TODO: Keep track of a path param that's used multiple times with different values
+						// TODO: Think if this really should be allowed? Maybe not...
+						// for (let i = 0; i < param_value.length; i++) {
+						// 	const value = param_value[i];
+						// 	if (i < param_value.length - 1) {
+						// 		piece = piece.replace(`[${param_name}]`, value) as `/${string}`;
+						// 	}
+						// }
+					} else {
+						while (piece.includes(`[${param_name}]`)) {
+							piece = piece.replace(`[${param_name}]`, param_value) as `/${string}`;
+						}
+					}
+					path_pieces[i] = encodeURIComponent(piece);
 				}
-				while (piece.includes(`[${param_name}]`)) {
-					piece = piece.replace(`[${param_name}]`, param_value) as `/${string}`;
-				}
-				path_pieces[i] = encodeURIComponent(piece);
+				path = path_pieces.join("/") as `/${string}`;
 			}
-			path = path_pieces.join("/") as `/${string}`;
+			if (extra_params && extra_params.query) {
+				const query_params = extra_params.query;
+				let query = "";
+				for (const name of Object.keys(query_params)) {
+					if (query.length == 0) {
+						query += "?";
+					} else {
+						query += "&";
+					}
+					const user_value = query_params[name];
+					if (typeof user_value == "string") {
+						query += `${name}=${encodeURIComponent(user_value)}`;
+						continue;
+					}
+					let first = true;
+					for (const value of user_value) {
+						if (first) {
+							first = false;
+						} else {
+							query += "&";
+						}
+						query += `${name}=${encodeURIComponent(value)}`;
+					}
+				}
+				path += query;
+			}
 		}
-
 		return `${this._base_path}${path}`;
 	}
 
@@ -188,6 +227,60 @@ export class CrimsonRanger<const T extends Quiver> {
 
 	is_model_loading(route_name: KeyOf<T>) {
 		return this._loading_models.has(route_name);
+	}
+
+	find_arrow_id_by_url(url_path = location.pathname): [KeyOf<T> | "%404%", ExtraParams] {
+		for (const id of Object.keys(this.quiver) as KeyOf<T>[]) {
+			if (id.startsWith("%") && id.endsWith("%")) {
+				continue;
+			}
+			const arrow = this.quiver[id];
+			const path_params: Record<string, string | string[]> = {};
+			if (path_param_regex.test(arrow.path)) {
+				let correct_id = true;
+				const split_arrow_path = arrow.path.split("/");
+				const split_url_path = url_path.split("/");
+				for (let i = 0; i < split_arrow_path.length; i++) {
+					if (i >= split_url_path.length) {
+						break;
+					}
+					const url_piece = split_url_path[i];
+					const arr_piece = split_arrow_path[i];
+					const found = arr_piece.match(path_param_regex);
+					if (!found) {
+						if (url_path == arr_piece) {
+							continue;
+						} else {
+							correct_id = false;
+							break;
+						};
+					}
+					const param_name = found[1];
+					const param_value = decodeURIComponent(url_piece);
+					if (param_name in path_params) {
+						const prev = path_params[param_name];
+						if (Array.isArray(prev)) {
+							prev.push(param_value);
+							continue;
+						}
+						path_params[param_name] = [prev, param_value];
+						continue;
+					}
+					path_params[param_name] = param_value;
+				}
+				if (!correct_id) {
+					continue;
+				}
+				return [id, { path: path_params, query: {} }];
+			}
+			const arr_path = `${this._base_path}${arrow.path}`;
+			if (arr_path != url_path) {
+				continue;
+			}
+
+			return [id, {}];
+		}
+		return ["%404%", {}];
 	}
 
 	get_arrow(route_name: KeyOf<T>, message?: string) {

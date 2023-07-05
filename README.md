@@ -7,14 +7,17 @@ Norishre is our dear dark elf ranger with beautiful crimson eyes which keeps tra
 This is a typescript based router that handles switching your pages within a [peasy-ui](https://github.com/peasy-ui/peasy-ui) app using as reference the `window.location.pathname`, essentially the current path in your domain `my-app.com` triggers path `/`, and `my-app.com/bio` triggers `/bio`, etc.
 
 ## Current Abilities
-- Simple routing based on URL (doesn't take into account query params)
+- Routing based on URL
+  - Use callback `on_pulled` to check what are the path params (query params soon tm)
+  - Can load models while changing the URL using a simple set of path and query params
 - Customizable 404 page
 - Async loading of page models
 - Able to manually call onto pages with simple path params (To be expanded upon)
+- Norishre updates on pop state
 
 ## Perchance Might Do
 Disclaimer* This list doesn't really reflect whether it will be done or not nor the order of which they'll be done!
-- Create base `CrimsonRanger` class that is like our dear Norishre but doesn't auto-update based on the pathname, so one can manage the active component at their own discretion.
+- Make `CrimsonRanger` route without using a URL path and move that to `Norishre`
 - Make Custom 404 page and possibly other custom error pages not require path to be passed
 - Parse and pass path/query parameters to subscribed components on page mount
   - Add restrictions to path/query parameters, cause redirect or display different page based on restriction
@@ -151,9 +154,9 @@ class App {
 		// Let's imagine that we initialize our ranger with some pages with arrows: "home", "about" and "contact"
 		this.router = createRouter();
 		this.navbar_items = [
-			this.router.new_link("home", "Home"),
-			this.router.new_link("about", "About Me"),
-			this.router.new_link("contact", "Contact Me")
+			this.router.get_arrow("home", "Home"),
+			this.router.get_arrow("about", "About Me"),
+			this.router.get_arrow("contact", "Contact Me")
 		]
 	}
 

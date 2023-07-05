@@ -1,16 +1,26 @@
 export type PeasyUIModel = { template: string | HTMLTemplateElement; } & Record<string | number | symbol, unknown>;
 
+export type ExtraParams = {
+	path?: Record<string, string | string[]>;
+	query?: Record<string, string | string[]>;
+};
+
+export type RoutePulledEvent<TData extends PeasyUIModel> = {
+	model: TData, params?: ExtraParams;
+};
+
 export type DelayedRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: false,
 	load: () => Promise<TData>;
-	on_pulled?: (ev: { model: TData, params?: Record<string, string>; }) => any;
+	on_pulled?: (ev: RoutePulledEvent) => any;
 };
 
 export type LaidRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: true,
 	model: TData;
+	on_pulled?: (ev: RoutePulledEvent) => any;
 };
 
 export type Route<TData extends PeasyUIModel> = DelayedRoute<TData> | LaidRoute<TData>;
