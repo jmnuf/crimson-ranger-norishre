@@ -1,4 +1,9 @@
-export type PeasyUIModel = { template: string | HTMLTemplateElement; } & Record<string | number | symbol, unknown>;
+export interface PeasyUIModel {
+	template: string | HTMLTemplateElement;
+	[x: string]: any;
+	[x: number]: any;
+	[x: symbol]: any;
+}
 
 export type ExtraParams = {
 	path?: Record<string, string | string[]>;
@@ -13,14 +18,14 @@ export type DelayedRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: false,
 	load: () => Promise<TData>;
-	on_pulled?: (ev: RoutePulledEvent) => any;
+	on_pulled?: (ev: RoutePulledEvent<TData>) => any;
 };
 
 export type LaidRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: true,
 	model: TData;
-	on_pulled?: (ev: RoutePulledEvent) => any;
+	on_pulled?: (ev: RoutePulledEvent<TData>) => any;
 };
 
 export type Route<TData extends PeasyUIModel> = DelayedRoute<TData> | LaidRoute<TData>;
