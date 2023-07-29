@@ -210,4 +210,39 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 			expect(router.pulled_arrow).toEqual(page_model);
 		});
 	});
+
+	describe("Pulling id from path", () => {
+		test("Path with no params", async () => {
+			const expected_id = "pageA";
+			const router = create_router();
+			const gottem = router.find_arrow_id_by_url("/page-a")[0];
+
+			expect(gottem).toEqual(expected_id);
+		});
+
+		test("Path with a single path param", async () => {
+			const expected_id = "hello";
+			const router = create_router();
+			const [got_id, got_obj] = router.find_arrow_id_by_url("/hello/world");
+
+			expect(got_id).toEqual(expected_id);
+
+			expect(got_obj).toBeDefined();
+
+			expect(got_obj.path!.name).toEqual("world");
+		});
+
+		test("Path with a multiple path params", async () => {
+			const expected_id = "message";
+			const router = create_router();
+			const [got_id, got_obj] = router.find_arrow_id_by_url("/say/hello/world");
+
+			expect(got_id).toEqual(expected_id);
+
+			expect(got_obj).toBeDefined();
+
+			expect(got_obj.path!.name).toEqual("hello");
+			expect(got_obj.path!.message).toEqual("world");
+		});
+	});
 });
