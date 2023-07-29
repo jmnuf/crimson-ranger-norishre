@@ -248,7 +248,7 @@ export class CrimsonRanger<const T extends Quiver> {
 					const arr_piece = split_arrow_path[i];
 					const found = arr_piece.match(path_param_regex);
 					if (!found) {
-						if (url_path == arr_piece) {
+						if (url_piece == arr_piece) {
 							continue;
 						} else {
 							correct_id = false;
