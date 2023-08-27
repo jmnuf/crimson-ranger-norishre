@@ -132,11 +132,11 @@ export class CrimsonRanger<const T extends Quiver> {
 		const arrow = this.quiver[arrow_id];
 		history.pushState(null, "", this.arrow_path(arrow_id, params));
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
-			void await this._load_model(arrow_id);
+			this.models[arrow_id] = await this._load_model(arrow_id);
 		}
 		if ("on_pulled" in arrow && typeof arrow.on_pulled == "function") {
-			const model = this.models[this._arrow_id]!;
-			void await arrow.on_pulled({
+			const model = this.models[arrow_id]!;
+			await arrow.on_pulled({
 				model,
 				params,
 			});
