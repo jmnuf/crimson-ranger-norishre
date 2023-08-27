@@ -66,6 +66,16 @@ function create_router() {
 					ev.model.name = params.name;
 					ev.model.message = params.message;
 				}
+			},
+			slowRoute: {
+				path: "/slow",
+				model: async (): Promise<BaseModel> => {
+					await new Promise(res => setTimeout(res, 500));
+					return {
+						element: null as any,
+						template: `<h1>Hi I'm kinda slow to load</h1>`
+					};
+				}
 			}
 		},
 		first_arrow: "index",
@@ -237,7 +247,7 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 			expect(router.pulled_arrow).toEqual(page_model);
 		});
 
-		test("With only path params", async () => {
+		test("With path params", async () => {
 			const router = create_router();
 			let page_model = router.models.hello;
 
@@ -271,6 +281,21 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 			});
 			expect(router.active_id).toEqual("message");
 			expect(router.pulled_arrow).toEqual(page_model);
+		});
+
+		test("Model is loaded after pull promise is finished", async () => {
+			const router = create_router();
+
+			await router.pull_from_quiver("slowRoute");
+
+			expect(router.models.slowRoute).toBeDefined();
+
+			// @ts-expect-error
+			delete router.models.slowRoute;
+
+			await router.pull_from_quiver("slowRoute").then(() => {
+				expect(router.models.slowRoute).toBeDefined();
+			});
 		});
 	});
 
