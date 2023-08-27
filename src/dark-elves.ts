@@ -178,32 +178,32 @@ export class CrimsonRanger<const T extends Quiver> {
 				}
 				path = path_pieces.join("/") as `/${string}`;
 			}
-			if (extra_params && extra_params.query) {
-				const query_params = extra_params.query;
-				let query = "";
-				for (const name of Object.keys(query_params)) {
-					if (query.length == 0) {
-						query += "?";
+		}
+		if (extra_params && extra_params.query) {
+			const query_params = extra_params.query;
+			let query = "";
+			for (const name of Object.keys(query_params)) {
+				if (query.length == 0) {
+					query += "?";
+				} else {
+					query += "&";
+				}
+				const user_value = query_params[name];
+				if (typeof user_value == "string") {
+					query += `${name}=${encodeURIComponent(user_value)}`;
+					continue;
+				}
+				let first = true;
+				for (const value of user_value) {
+					if (first) {
+						first = false;
 					} else {
 						query += "&";
 					}
-					const user_value = query_params[name];
-					if (typeof user_value == "string") {
-						query += `${name}=${encodeURIComponent(user_value)}`;
-						continue;
-					}
-					let first = true;
-					for (const value of user_value) {
-						if (first) {
-							first = false;
-						} else {
-							query += "&";
-						}
-						query += `${name}=${encodeURIComponent(value)}`;
-					}
+					query += `${name}=${encodeURIComponent(value)}`;
 				}
-				path += query;
 			}
+			path += query;
 		}
 		return `${this._base_path}${path}`;
 	}

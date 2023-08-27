@@ -172,11 +172,11 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 				},
 			});
 
-			expect(window.location.pathname).toEqual(path);
+			expect(path).toEqual("/" + window.location.search);
 
 			expect(router.active_id).toEqual("index");
 
-			path = router.arrow_path("hello", {
+			path = router.arrow_path("index", {
 				query: {
 					name: "Molly Schwartz",
 				},
@@ -186,13 +186,13 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 
 			expect(path).toEqual(`/?name=${encodeURIComponent("Molly Schwartz")}`);
 
-			await router.pull_from_quiver("hello", {
+			await router.pull_from_quiver("index", {
 				query: {
 					name: "Molly Schwartz",
 				},
 			});
 
-			expect(window.location.pathname).toEqual(path);
+			expect("/" + window.location.search).toEqual(path);
 
 			expect(router.active_id).toEqual("index");
 
@@ -212,7 +212,7 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 				},
 			});
 
-			expect(window.location.pathname).toEqual(path);
+			expect(path).toEqual("/page-a" + window.location.search);
 
 			expect(router.active_id).toEqual("pageA");
 		});
