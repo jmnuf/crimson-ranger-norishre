@@ -153,6 +153,69 @@ describe("Dark Elf Crimson Ranger: Manual operations", () => {
 
 			expect(router.active_id).toEqual("message");
 		});
+
+		test("With only query params", async () => {
+			const router = create_router();
+			let path = router.arrow_path("index", {
+				query: {
+					name: "John",
+				}
+			});
+
+			expect(typeof path).toEqual("string");
+
+			expect(path).toEqual("/?name=John");
+
+			await router.pull_from_quiver("index", {
+				query: {
+					name: "John",
+				},
+			});
+
+			expect(window.location.pathname).toEqual(path);
+
+			expect(router.active_id).toEqual("index");
+
+			path = router.arrow_path("hello", {
+				query: {
+					name: "Molly Schwartz",
+				},
+			});
+
+			expect(typeof path).toEqual("string");
+
+			expect(path).toEqual(`/?name=${encodeURIComponent("Molly Schwartz")}`);
+
+			await router.pull_from_quiver("hello", {
+				query: {
+					name: "Molly Schwartz",
+				},
+			});
+
+			expect(window.location.pathname).toEqual(path);
+
+			expect(router.active_id).toEqual("index");
+
+			path = router.arrow_path("pageA", {
+				query: {
+					from: "Carrot Top",
+					message: "That looks good on you"
+				},
+			});
+
+			expect(path).toEqual(`/page-a?from=${encodeURIComponent("Carrot Top")}&message=${encodeURIComponent("That looks good on you")}`);
+
+			await router.pull_from_quiver("pageA", {
+				query: {
+					from: "Carrot Top",
+					message: "That looks good on you"
+				},
+			});
+
+			expect(window.location.pathname).toEqual(path);
+
+			expect(router.active_id).toEqual("pageA");
+		});
 	});
 
 
