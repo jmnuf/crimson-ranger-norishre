@@ -129,6 +129,9 @@ export class CrimsonRanger<const T extends Quiver> {
 			this._arrow_id = "%404%" as KeyOf<T>;
 			return;
 		}
+		if (this._loading_models.has(arrow_id)) {
+			await this._loading_models.get(arrow_id);
+		}
 		const arrow = this.quiver[arrow_id];
 		history.pushState(null, "", this.arrow_path(arrow_id, params));
 		if (!this.models[arrow_id] && !this._loading_models.has(arrow_id)) {
@@ -230,11 +233,15 @@ export class CrimsonRanger<const T extends Quiver> {
 	}
 
 	find_arrow_id_by_url(url_path = location.pathname): [KeyOf<T> | "%404%", ExtraParams] {
-		for (const id of Object.keys(this.quiver) as KeyOf<T>[]) {
+		return CrimsonRanger.find_arrow_id_by_url(this.quiver, url_path, this._base_path);
+	}
+
+	static find_arrow_id_by_url<const T extends Quiver>(quiver: T, url_path: string = location.pathname, base_path: string = ""): [KeyOf<T> | "%404%", ExtraParams] {
+		for (const id of Object.keys(quiver) as KeyOf<T>[]) {
 			if (id.startsWith("%") && id.endsWith("%")) {
 				continue;
 			}
-			const arrow = this.quiver[id];
+			const arrow = quiver[id];
 			const path_params: Record<string, string | string[]> = {};
 			if (path_param_regex.test(arrow.path)) {
 				let correct_id = true;
@@ -273,7 +280,7 @@ export class CrimsonRanger<const T extends Quiver> {
 				}
 				return [id, { path: path_params, query: {} }];
 			}
-			const arr_path = `${this._base_path}${arrow.path}`;
+			const arr_path = `${base_path}${arrow.path}`;
 			if (arr_path != url_path) {
 				continue;
 			}

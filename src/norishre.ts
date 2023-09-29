@@ -1,26 +1,10 @@
-import { Quiver, KeyOf, DelayedRoute, LaidRoute, RangerConfig, RangerConfigIntoQuiver, ExtraParams } from "./base-types";
+import { Quiver, KeyOf, DelayedRoute, LaidRoute, RangerConfig, RangerConfigIntoQuiver, ExtraParams, Route, PeasyUIModel } from "./base-types";
 import { CrimsonRanger } from "./dark-elves";
 
-function find_arrow_id_by_url<T extends Quiver>(base_path: string, quiver: T) {
-	const url_path = location.pathname;
-	for (const id of Object.keys(quiver) as KeyOf<T>[]) {
-		if (id == "%404%") {
-			continue;
-		}
-		const arrow = quiver[id];
-		const arr_path = `${base_path}${arrow.path}`;
-		if (arr_path != url_path) {
-			continue;
-		}
-
-		return id;
-	}
-	return "%404%";
-}
 
 export class Norishre<const T extends Quiver> extends CrimsonRanger<T> {
 	constructor(quiver: T, base_path: "" | `/${string}` = "", first_arrow?: KeyOf<T>) {
-		first_arrow = first_arrow == null ? find_arrow_id_by_url(base_path, quiver) as KeyOf<T> : first_arrow;
+		first_arrow = first_arrow == null ? CrimsonRanger.find_arrow_id_by_url(quiver, location.pathname, base_path)[0] as KeyOf<T> : first_arrow;
 		super(quiver, base_path, first_arrow);
 		window.addEventListener("popstate", async () => {
 			const [id, params] = this.find_arrow_id_by_url() as [KeyOf<T>, ExtraParams];
@@ -32,7 +16,7 @@ export class Norishre<const T extends Quiver> extends CrimsonRanger<T> {
 			const arrow = this.quiver[id];
 			if ("on_pulled" in arrow && typeof arrow.on_pulled == "function") {
 				const model = this.models[this._arrow_id]!;
-				void await arrow.on_pulled({
+				await arrow.on_pulled({
 					model,
 					params,
 				});
