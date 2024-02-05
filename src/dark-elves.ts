@@ -14,17 +14,17 @@ type AbsoluteArrowPath<T extends Quiver> = Exclude<KeyOf<T>, `%${string}` | `${s
 
 const path_param_regex = /\[([^\]]+)\]/;
 
-export class CrimsonRanger<const T extends Quiver> {
+export class CrimsonRanger<const UserQuiver extends Quiver> {
 	static readonly template = `<crimson-ranger class="crimson-view" pui="pulled_arrow ==="></crimson-ranger>` as const;
-	readonly quiver: T;
-	readonly models: ArrowModels<T>;
-	protected _arrow_id: KeyOf<T>;
-	protected _prev_arrow_id: KeyOf<T>;
+	readonly quiver: UserQuiver;
+	readonly models: ArrowModels<UserQuiver>;
+	protected _arrow_id: KeyOf<UserQuiver>;
+	protected _prev_arrow_id: KeyOf<UserQuiver>;
 	protected _loading_models: Map<string, Promise<PeasyUIModel>>;
-	protected _live_arrows: Map<string, CrimsonArrow<typeof this, T>>;
+	protected _live_arrows: Map<string, CrimsonArrow<typeof this, UserQuiver>>;
 	protected _base_path: string;
 
-	constructor(quiver: T, base_path: "" | `/${string}` = "", first_arrow: KeyOf<T>) {
+	constructor(quiver: UserQuiver, base_path: "" | `/${string}` = "", first_arrow: KeyOf<UserQuiver>) {
 		this.quiver = Object.freeze(quiver);
 		while (base_path.endsWith("/")) {
 			base_path = base_path.substring(0, base_path.length - 1) as `/${string}`;
@@ -39,10 +39,10 @@ export class CrimsonRanger<const T extends Quiver> {
 		this._loading_models = loading;
 	}
 
-	private _init_(quiver: T, load_arrow_id?: KeyOf<T>) {
-		const models = {} as ArrowModels<T>;
+	private _init_(quiver: UserQuiver, load_arrow_id?: KeyOf<UserQuiver>) {
+		const models = {} as ArrowModels<UserQuiver>;
 		const loader = new Map<string, Promise<PeasyUIModel>>();
-		for (const id of Object.keys(quiver) as KeyOf<T>[]) {
+		for (const id of Object.keys(quiver) as KeyOf<UserQuiver>[]) {
 			const arrow = quiver[id];
 			arrow.path = this._encode_path_pieces(arrow.path) as `/${string}`;
 			if (arrow.loaded) {
@@ -68,7 +68,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		}).join("/");
 	}
 
-	protected async _load_model(id: KeyOf<T>) {
+	protected async _load_model(id: KeyOf<UserQuiver>) {
 		if (this._loading_models.has(id)) {
 			return await this._loading_models.get(id)!;
 		}
@@ -124,7 +124,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		return await this._load_model(this._arrow_id);
 	}
 
-	set_on_pulled_callback<ArrowID extends KeyOf<T>>(arrow_id: ArrowID, callback: RoutePulledCallback<typeof this.models[ArrowID]>) {
+	set_on_pulled_callback<ArrowID extends KeyOf<UserQuiver>>(arrow_id: ArrowID, callback: RoutePulledCallback<typeof this.models[ArrowID]>) {
 		const arrow = this.quiver[arrow_id];
 		if (!arrow) {
 			throw new TypeError(`Attempting to add pulled callback onto unknown arrow id ${arrow_id}`);
@@ -132,10 +132,10 @@ export class CrimsonRanger<const T extends Quiver> {
 		arrow.on_pulled = callback;
 	}
 
-	async pull_from_quiver(arrow_id: KeyOf<T>, params?: ExtraParams) {
+	async pull_from_quiver(arrow_id: KeyOf<UserQuiver>, params?: ExtraParams) {
 		if (!(arrow_id in this.quiver)) {
 			this._prev_arrow_id = this._arrow_id;
-			this._arrow_id = "%404%" as KeyOf<T>;
+			this._arrow_id = "%404%" as KeyOf<UserQuiver>;
 			return;
 		}
 		if (this._loading_models.has(arrow_id)) {
@@ -158,7 +158,7 @@ export class CrimsonRanger<const T extends Quiver> {
 	}
 
 	// TODO: Properly handle multiple path params
-	arrow_path(arrow_id: KeyOf<T>, extra_params?: ExtraParams) {
+	arrow_path(arrow_id: KeyOf<UserQuiver>, extra_params?: ExtraParams) {
 		const arrow = this.quiver[arrow_id];
 		let path = arrow.path;
 
@@ -220,28 +220,28 @@ export class CrimsonRanger<const T extends Quiver> {
 		return `${this._base_path}${path}`;
 	}
 
-	private create_or_retrieve_arrow = (route_name: KeyOf<T>, message?: string) => {
+	private create_or_retrieve_arrow = (route_name: KeyOf<UserQuiver>, message?: string) => {
 		if (this._live_arrows.has(route_name)) {
 			return this._live_arrows.get(route_name)!;
 		}
-		const arrow = new CrimsonArrow<typeof this, T>(this, route_name, message);
+		const arrow = new CrimsonArrow<typeof this, UserQuiver>(this, route_name, message);
 		this._live_arrows.set(route_name, arrow);
 		return arrow;
 	};
 
-	is_arrow_live(route_name: KeyOf<T>) {
+	is_arrow_live(route_name: KeyOf<UserQuiver>) {
 		return this._live_arrows.has(route_name);
 	}
 
-	is_model_loaded(route_name: KeyOf<T>) {
+	is_model_loaded(route_name: KeyOf<UserQuiver>) {
 		return route_name in this.models;
 	}
 
-	is_model_loading(route_name: KeyOf<T>) {
+	is_model_loading(route_name: KeyOf<UserQuiver>) {
 		return this._loading_models.has(route_name);
 	}
 
-	find_arrow_id_by_url(url_path = location.pathname): [KeyOf<T> | "%404%", ExtraParams] {
+	find_arrow_id_by_url(url_path = location.pathname): [KeyOf<UserQuiver> | "%404%", ExtraParams] {
 		return CrimsonRanger.find_arrow_id_by_url(this.quiver, url_path, this._base_path);
 	}
 
@@ -299,7 +299,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		return ["%404%", {}];
 	}
 
-	get_arrow(route_name: KeyOf<T>, message?: string) {
+	get_arrow(route_name: KeyOf<UserQuiver>, message?: string) {
 		// TODO: Move this to be done when the link is almost or fully visible
 		if (!this.is_model_loaded(route_name) && !this.is_model_loading(route_name)) {
 			// Start loading the model when a link to it is requested and not loaded/loading yet
@@ -310,7 +310,7 @@ export class CrimsonRanger<const T extends Quiver> {
 		return arrow;
 	}
 
-	links_list(arrow_ids: AbsoluteArrowPath<T>[] = this.list_arrow_ids()) {
+	links_list(arrow_ids: AbsoluteArrowPath<UserQuiver>[] = this.list_arrow_ids()) {
 		const list = [];
 		for (const key of arrow_ids) {
 			const link = this.get_arrow(key);
@@ -320,10 +320,10 @@ export class CrimsonRanger<const T extends Quiver> {
 	}
 
 	list_arrow_ids() {
-		const all_ids = Object.keys(this.quiver) as KeyOf<T>[];
+		const all_ids = Object.keys(this.quiver) as KeyOf<UserQuiver>[];
 		const arrow_ids = all_ids.filter(id => {
 			return !(id.startsWith("%") || path_param_regex.test(id));
-		}) as AbsoluteArrowPath<T>[];
+		}) as AbsoluteArrowPath<UserQuiver>[];
 		return arrow_ids;
 	}
 
