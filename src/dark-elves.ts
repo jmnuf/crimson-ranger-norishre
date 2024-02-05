@@ -124,7 +124,7 @@ export class CrimsonRanger<const UserQuiver extends Quiver> {
 		return await this._load_model(this._arrow_id);
 	}
 
-	set_on_pulled_callback<ArrowID extends KeyOf<UserQuiver>>(arrow_id: ArrowID, callback: RoutePulledCallback<typeof this.models[ArrowID]>) {
+	set_on_pulled_callback<ArrowID extends KeyOf<UserQuiver>>(arrow_id: ArrowID, callback: RoutePulledCallback<typeof this.models[ArrowID]> | undefined) {
 		const arrow = this.quiver[arrow_id];
 		if (!arrow) {
 			throw new TypeError(`Attempting to add pulled callback onto unknown arrow id ${arrow_id}`);
