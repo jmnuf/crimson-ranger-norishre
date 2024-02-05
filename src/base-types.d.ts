@@ -14,24 +14,26 @@ export type RoutePulledEvent<TData extends PeasyUIModel> = {
 	model: TData, params?: ExtraParams;
 };
 
+export type RoutePulledCallback<TData extends PeasyUIModel> = (event: RoutePulledEvent<TData>) => any;
+
 export type DelayedRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: false,
 	load: () => Promise<TData>;
-	on_pulled?: (ev: RoutePulledEvent<TData>) => any;
+	on_pulled?: RoutePulledCallback<TData>;
 };
 
 export type LaidRoute<TData extends PeasyUIModel> = {
 	path: `/${string}`;
 	loaded: true,
 	model: TData;
-	on_pulled?: (ev: RoutePulledEvent<TData>) => any;
+	on_pulled?: RoutePulledCallback<TData>;
 };
 
 export type Route<TData extends PeasyUIModel> = DelayedRoute<TData> | LaidRoute<TData>;
 
 export type ArrowModels<T extends Record<string, DelayedRoute<PeasyUIModel> | LaidRoute<PeasyUIModel>>> = {
-	[K in keyof T]: T[K] extends DelayedRoute<infer R> ? R | undefined : T[K] extends LaidRoute<infer M> ? M : never;
+	[K in keyof T]: T[K] extends DelayedRoute<infer R> ? R : T[K] extends LaidRoute<infer M> ? M : never;
 };
 
 export type KeyOf<T> = `${Exclude<keyof T, symbol>}`;

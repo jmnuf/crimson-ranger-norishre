@@ -1,7 +1,8 @@
 import {
 	ArrowModels, DelayedRoute, ExtraParams, KeyOf,
 	LaidRoute, PeasyUIModel, Quiver,
-	RangerConfig, RangerConfigIntoQuiver, Route
+	RangerConfig, RangerConfigIntoQuiver, Route,
+	RoutePulledEvent, RoutePulledCallback,
 } from "./base-types";
 
 export const Base404Page = {
@@ -121,6 +122,10 @@ export class CrimsonRanger<const T extends Quiver> {
 
 	async loadDrawnArrow() {
 		return await this._load_model(this._arrow_id);
+	}
+
+	set_on_pulled_callback<ArrowID extends KeyOf<T>>(arrow_id: ArrowID, callback: RoutePulledCallback<typeof this.models[ArrowID]>) {
+		this.quiver[arrow_id].on_pulled = callback;
 	}
 
 	async pull_from_quiver(arrow_id: KeyOf<T>, params?: ExtraParams) {
